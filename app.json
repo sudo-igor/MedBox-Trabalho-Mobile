@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "igorsudo23-app",
-    "slug": "igorsudo23-app",
+    "name": "MedBox",
+    "slug": "MedBox",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "igorsudo23app",
+    "scheme": "medbox",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
