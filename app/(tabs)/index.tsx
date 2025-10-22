@@ -9,24 +9,27 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 
 // Imagens do projeto
-import banner1 from "../../assets/images/banner1.jpg";
-import banner2 from "../../assets/images/banner2.jpg";
-import banner3 from "../../assets/images/banner3.jpg";
-import farmaciaLogo from "../../assets/images/logo.png";
-import remedioImg from "../../assets/images/remedio.png";
+const banner1 = require("../../assets/images/banner1.jpg");
+const banner2 = require("../../assets/images/banner2.jpg");
+const banner3 = require("../../assets/images/banner3.jpg");
+const farmaciaLogo = require("../../assets/images/logo.png");
+const remedioImg = require("../../assets/images/remedio.png");
 
-import belezaImg from "../../assets/images/beleza.jpg";
-import cosmeticosImg from "../../assets/images/cosmeticos.jpg";
-import medicamentosImg from "../../assets/images/medicamentos.jpg";
-import saudeImg from "../../assets/images/saude.png";
+const belezaImg = require("../../assets/images/beleza.jpg");
+const cosmeticosImg = require("../../assets/images/cosmeticos.jpg");
+const medicamentosImg = require("../../assets/images/medicamentos.jpg");
+const saudeImg = require("../../assets/images/saude.png");
 
 // Logos das farmácias
-import logoDrogasil from "../../assets/images/logo-drogasil.jpg";
-import logoRosario from "../../assets/images/logo-rosario.jpg";
+const logoDrogasil = require("../../assets/images/logo-drogasil.jpg");
+const logoRosario = require("../../assets/images/logo-rosario.jpg");
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   const categorias = [
     { id: "1", nome: "Medicamentos", imagem: medicamentosImg },
     { id: "2", nome: "Saúde", imagem: saudeImg },
@@ -35,17 +38,51 @@ export default function HomeScreen() {
   ];
 
   const produtos = [
-    { id: "1", nome: "Remédio", preco: "R$ 40,00" },
-    { id: "2", nome: "Remédio", preco: "R$ 40,00" },
-    { id: "3", nome: "Remédio", preco: "R$ 40,00" },
-    { id: "4", nome: "Remédio", preco: "R$ 40,00" },
+    { id: "1", nome: "Remédio", preco: 40.00, imagem: remedioImg },
+    { id: "2", nome: "Remédio", preco: 40.00, imagem: remedioImg },
+    { id: "3", nome: "Remédio", preco: 40.00, imagem: remedioImg },
+    { id: "4", nome: "Remédio", preco: 40.00, imagem: remedioImg },
   ];
 
   const farmacias = [
-    { id: "1", nome: "Drogasil - Taguatinga Sul", distancia: "0.6 km", tempo: "15 - 30 min", entrega: "Entrega grátis a partir de R$ 29", logo: logoDrogasil },
-    { id: "2", nome: "Drogasil - Águas Claras", distancia: "3.7 km", tempo: "35 - 50 min", entrega: "Entrega grátis a partir de R$ 29", logo: logoDrogasil },
-    { id: "3", nome: "Drogaria Rosário - Guará 1", distancia: "8 km", tempo: "25 - 40 min", entrega: "Entrega grátis a partir de R$ 35", logo: logoRosario },
+    { 
+      id: "1", 
+      nome: "Drogasil - Taguatinga Sul", 
+      distancia: "0.6 km", 
+      tempo: "15 - 30 min", 
+      entrega: "Entrega grátis a partir de R$ 29", 
+      logo: logoDrogasil 
+    },
+    { 
+      id: "2", 
+      nome: "Drogasil - Águas Claras", 
+      distancia: "3.7 km", 
+      tempo: "35 - 50 min", 
+      entrega: "Entrega grátis a partir de R$ 29", 
+      logo: logoDrogasil 
+    },
+    { 
+      id: "3", 
+      nome: "Drogaria Rosário - Guará 1", 
+      distancia: "8 km", 
+      tempo: "25 - 40 min", 
+      entrega: "Entrega grátis a partir de R$ 35", 
+      logo: logoRosario 
+    },
   ];
+
+  const handleProductPress = (productId: string) => {
+    router.push(`/(tabs)/product/${productId}` as any);
+  };
+
+  const handleSearchPress = () => {
+    router.push('/(tabs)/search');
+  };
+
+  const handleCartPress = () => {
+    // Implementar navegação para carrinho
+    console.log('Carrinho clicado');
+  };
 
   return (
     <View style={styles.container}>
@@ -57,12 +94,19 @@ export default function HomeScreen() {
             <Image source={farmaciaLogo} style={styles.logo} />
           </TouchableOpacity>
 
-          <View style={styles.searchContainer}>
+          <TouchableOpacity 
+            style={styles.searchContainer}
+            onPress={handleSearchPress}
+            activeOpacity={0.7}
+          >
             <Ionicons name="search" size={20} color="gray" style={{ marginRight: 8 }} />
-            <TextInput placeholder="Buscar" style={styles.searchInput} />
-          </View>
+            <Text style={styles.searchPlaceholder}>Buscar</Text>
+          </TouchableOpacity>
 
-          <TouchableOpacity style={styles.cartButton}>
+          <TouchableOpacity 
+            style={styles.cartButton}
+            onPress={handleCartPress}
+          >
             <Ionicons name="cart-outline" size={24} color="black" />
           </TouchableOpacity>
         </View>
@@ -85,7 +129,11 @@ export default function HomeScreen() {
         </View>
 
         {/* Promoções */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={{ marginBottom: 16 }}
+        >
           <Image source={banner1} style={styles.promoImage} />
           <Image source={banner2} style={styles.promoImage} />
           <Image source={banner3} style={styles.promoImage} />
@@ -93,12 +141,20 @@ export default function HomeScreen() {
 
         {/* Categorias */}
         <Text style={styles.sectionTitle}>Categorias</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={{ marginBottom: 16 }}
+        >
           {categorias.map((cat) => (
-            <View key={cat.id} style={styles.categoryContainer}>
+            <TouchableOpacity 
+              key={cat.id} 
+              style={styles.categoryContainer}
+              activeOpacity={0.7}
+            >
               <Image source={cat.imagem} style={styles.categoryImage} />
               <Text style={styles.categoryLabel}>{cat.nome}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
 
@@ -106,10 +162,17 @@ export default function HomeScreen() {
         <Text style={styles.sectionTitle}>Compre Novamente</Text>
         <View style={styles.productsGrid}>
           {produtos.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.productCard}>
-              <Image source={remedioImg} style={styles.productImage} />
+            <TouchableOpacity 
+              key={item.id} 
+              style={styles.productCard}
+              onPress={() => handleProductPress(item.id)}
+              activeOpacity={0.7}
+            >
+              <Image source={item.imagem} style={styles.productImage} />
               <Text style={styles.productName}>{item.nome}</Text>
-              <Text style={styles.productPrice}>{item.preco}</Text>
+              <Text style={styles.productPrice}>
+                R$ {item.preco.toFixed(2).replace('.', ',')}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -130,16 +193,25 @@ export default function HomeScreen() {
         {/* Lista de farmácias */}
         <Text style={styles.sectionTitle}>Farmácias</Text>
         {farmacias.map((farmacia) => (
-          <View key={farmacia.id} style={styles.farmaciaCard}>
+          <TouchableOpacity 
+            key={farmacia.id} 
+            style={styles.farmaciaCard}
+            activeOpacity={0.7}
+          >
             <Image source={farmacia.logo} style={styles.farmaciaLogo} />
             <View style={{ flex: 1 }}>
               <Text style={styles.farmaciaNome}>{farmacia.nome}</Text>
-              <Text style={styles.farmaciaInfo}>{farmacia.distancia} • {farmacia.tempo}</Text>
+              <Text style={styles.farmaciaInfo}>
+                {farmacia.distancia} • {farmacia.tempo}
+              </Text>
               <Text style={styles.farmaciaEntrega}>{farmacia.entrega}</Text>
             </View>
             <Ionicons name="heart-outline" size={22} color="black" />
-          </View>
+          </TouchableOpacity>
         ))}
+
+        {/* Espaço extra no final para não ficar coberto pela barra de navegação */}
+        <View style={{ height: 20 }} />
 
       </ScrollView>
     </View>
@@ -147,10 +219,25 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 12, paddingTop: 40 },
-  topBar: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  logoContainer: { marginRight: 10 },
-  logo: { width: 40, height: 40, borderRadius: 8 },
+  container: { 
+    flex: 1, 
+    backgroundColor: "#fff", 
+    paddingHorizontal: 12, 
+    paddingTop: 40 
+  },
+  topBar: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    marginBottom: 12 
+  },
+  logoContainer: { 
+    marginRight: 10 
+  },
+  logo: { 
+    width: 40, 
+    height: 40, 
+    borderRadius: 8 
+  },
   searchContainer: {
     flex: 1,
     flexDirection: "row",
@@ -160,10 +247,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  searchInput: { flex: 1 },
-  cartButton: { marginLeft: 12, padding: 8, backgroundColor: "#f2f2f2", borderRadius: 8 },
-  addressContainer: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  addressText: { marginLeft: 6, fontSize: 14, flex: 1 },
+  searchInput: { 
+    flex: 1 
+  },
+  searchPlaceholder: {
+    flex: 1,
+    color: "#999",
+    fontSize: 16,
+  },
+  cartButton: { 
+    marginLeft: 12, 
+    padding: 8, 
+    backgroundColor: "#f2f2f2", 
+    borderRadius: 8 
+  },
+  addressContainer: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    marginBottom: 12 
+  },
+  addressText: { 
+    marginLeft: 6, 
+    fontSize: 14, 
+    flex: 1 
+  },
   quickBuyCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -172,7 +279,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 20,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 8 },
+  sectionTitle: { 
+    fontSize: 16, 
+    fontWeight: "bold", 
+    marginBottom: 8 
+  },
   promoImage: {
     width: 220,
     height: 140,
@@ -180,7 +291,10 @@ const styles = StyleSheet.create({
     marginRight: 12,
     resizeMode: "cover",
   },
-  categoryContainer: { alignItems: "center", marginRight: 16 },
+  categoryContainer: { 
+    alignItems: "center", 
+    marginRight: 16 
+  },
   categoryImage: {
     width: 60,
     height: 60,
@@ -188,7 +302,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#eee",
     marginBottom: 6,
   },
-  categoryLabel: { fontSize: 12, color: "#333", textAlign: "center" },
+  categoryLabel: { 
+    fontSize: 12, 
+    color: "#333", 
+    textAlign: "center" 
+  },
   productsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -203,9 +321,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     alignItems: "center",
   },
-  productImage: { width: 80, height: 100, marginBottom: 8 },
-  productName: { fontSize: 14, marginBottom: 4 },
-  productPrice: { fontWeight: "bold" },
+  productImage: { 
+    width: 80, 
+    height: 100, 
+    marginBottom: 8 
+  },
+  productName: { 
+    fontSize: 14, 
+    marginBottom: 4 
+  },
+  productPrice: { 
+    fontWeight: "bold" 
+  },
   filtersContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -226,8 +353,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
-  farmaciaLogo: { width: 50, height: 50, marginRight: 12, borderRadius: 8 },
-  farmaciaNome: { fontWeight: "bold", fontSize: 15 },
-  farmaciaInfo: { fontSize: 13, color: "gray" },
-  farmaciaEntrega: { fontSize: 12, color: "green" },
+  farmaciaLogo: { 
+    width: 50, 
+    height: 50, 
+    marginRight: 12, 
+    borderRadius: 8 
+  },
+  farmaciaNome: { 
+    fontWeight: "bold", 
+    fontSize: 15 
+  },
+  farmaciaInfo: { 
+    fontSize: 13, 
+    color: "gray" 
+  },
+  farmaciaEntrega: { 
+    fontSize: 12, 
+    color: "green" 
+  },
 });
