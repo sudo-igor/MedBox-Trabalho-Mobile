@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   Text,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useCart } from '@/contexts/CartContext';
 
 const { width } = Dimensions.get('window');
 
@@ -41,13 +43,43 @@ const recommendations = [
 export default function ProductDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  
+  // Verificar se o contexto está disponível
+  let cart;
+  try {
+    cart = useCart();
+  } catch (error) {
+    console.error('CartContext não disponível:', error);
+    // Fallback caso o contexto não esteja disponível
+    cart = {
+      addItem: (item: any) => {
+        Alert.alert('Erro', 'Sistema de carrinho não disponível');
+      },
+      getItemQuantity: () => 0,
+      updateQuantity: () => {},
+    };
+  }
+  
+  const { addItem, getItemQuantity, updateQuantity } = cart;
+  
   const [isFavorite, setIsFavorite] = useState(false);
   const [isPharmacyFavorite, setIsPharmacyFavorite] = useState(false);
   const [sobreExpanded, setSobreExpanded] = useState(false);
   const [bulaExpanded, setBulaExpanded] = useState(false);
 
+  const itemQuantity = getItemQuantity(productData.id);
+
   const handleBack = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.push('/(tabs)');
+    }
+  };
+
+  const handleSearch = () => {
+    console.log('Navegando para busca...');
+    router.push('/(tabs)/search');
   };
 
   const handleRecommendationPress = (productId: string) => {
@@ -62,6 +94,41 @@ export default function ProductDetailScreen() {
     setIsPharmacyFavorite(!isPharmacyFavorite);
   };
 
+  const handleAddToCart = () => {
+    console.log('Adicionando ao carrinho:', productData);
+    try {
+      addItem({
+        id: productData.id,
+        name: productData.name,
+        price: productData.price,
+        image: productData.image,
+      });
+      console.log('Produto adicionado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao adicionar ao carrinho:', error);
+      Alert.alert('Erro', 'Não foi possível adicionar o produto ao carrinho');
+    }
+  };
+
+  const handleIncrement = () => {
+    console.log('Incrementando quantidade');
+    updateQuantity(productData.id, itemQuantity + 1);
+  };
+
+  const handleDecrement = () => {
+    console.log('Decrementando quantidade');
+    if (itemQuantity > 1) {
+      updateQuantity(productData.id, itemQuantity - 1);
+    }
+  };
+
+  const handleGoToCart = () => {
+    console.log('Indo para o carrinho');
+    router.push('/(tabs)/cart');
+  };
+
+  console.log('Item quantity:', itemQuantity);
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -74,9 +141,14 @@ export default function ProductDetailScreen() {
           <Ionicons name="chevron-back" size={24} color="#333" />
         </TouchableOpacity>
         
-        <View style={styles.searchBar}>
+        <TouchableOpacity 
+          style={styles.searchBar}
+          onPress={handleSearch}
+          activeOpacity={0.7}
+        >
           <Ionicons name="search" size={20} color="#999" />
-        </View>
+          <Text style={styles.searchPlaceholder}>Buscar</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -237,10 +309,47 @@ export default function ProductDetailScreen() {
             R$ {productData.price.toFixed(2).replace('.', ',')}
           </Text>
         </View>
-        <TouchableOpacity style={styles.buyButton} activeOpacity={0.8}>
-          <Ionicons name="cart" size={20} color="#FFF" />
-          <Text style={styles.buyButtonText}>Comprar</Text>
-        </TouchableOpacity>
+        
+        {itemQuantity === 0 ? (
+          <TouchableOpacity 
+            style={styles.buyButton} 
+            onPress={handleAddToCart}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="cart" size={20} color="#FFF" />
+            <Text style={styles.buyButtonText}>Comprar</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.cartActionsContainer}>
+            <View style={styles.quantityControlsBottom}>
+              <TouchableOpacity
+                style={styles.quantityButtonBottom}
+                onPress={handleDecrement}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="remove" size={20} color="#FFF" />
+              </TouchableOpacity>
+
+              <Text style={styles.quantityTextBottom}>{itemQuantity}</Text>
+
+              <TouchableOpacity
+                style={styles.quantityButtonBottom}
+                onPress={handleIncrement}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={20} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.goToCartButton}
+              onPress={handleGoToCart}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.goToCartButtonText}>Ir para o carrinho</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -269,6 +378,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
+  },
+  searchPlaceholder: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#999',
   },
   content: {
     flex: 1,
@@ -450,6 +565,48 @@ const styles = StyleSheet.create({
   },
   buyButtonText: {
     fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  cartActionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  quantityControlsBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF0000',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    gap: 12,
+  },
+  quantityButtonBottom: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quantityTextBottom: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
+    minWidth: 24,
+    textAlign: 'center',
+  },
+  goToCartButton: {
+    flex: 1,
+    backgroundColor: '#FF0000',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  goToCartButtonText: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#FFF',
   },

@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useCart } from "@/contexts/CartContext";
 
 // Imagens do projeto
 const banner1 = require("../../assets/images/banner1.jpg");
@@ -29,6 +30,8 @@ const logoRosario = require("../../assets/images/logo-rosario.jpg");
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { getTotalItems } = useCart();
+  const cartItemsCount = getTotalItems();
 
   const categorias = [
     { id: "1", nome: "Medicamentos", imagem: medicamentosImg },
@@ -80,8 +83,7 @@ export default function HomeScreen() {
   };
 
   const handleCartPress = () => {
-    // Implementar navegação para carrinho
-    console.log('Carrinho clicado');
+    router.push('/(tabs)/cart');
   };
 
   return (
@@ -108,6 +110,11 @@ export default function HomeScreen() {
             onPress={handleCartPress}
           >
             <Ionicons name="cart-outline" size={24} color="black" />
+            {cartItemsCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{cartItemsCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -259,7 +266,25 @@ const styles = StyleSheet.create({
     marginLeft: 12, 
     padding: 8, 
     backgroundColor: "#f2f2f2", 
-    borderRadius: 8 
+    borderRadius: 8,
+    position: 'relative',
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: '#FF0000',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  cartBadgeText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
   addressContainer: { 
     flexDirection: "row", 

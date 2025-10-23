@@ -5,6 +5,7 @@ import { View, StyleSheet } from 'react-native';
 import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import BottomTabBar from '@/components/ui/BottomTabBar';
+import { CartProvider } from '@/contexts/CartContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -39,24 +40,28 @@ export default function RootLayout() {
   };
 
   // Verifica se deve mostrar a barra de navegação
-  const shouldShowTabBar = !pathname.includes('/modal');
+  const shouldShowTabBar = !pathname.includes('/modal') && 
+                          !pathname.includes('/product') && 
+                          !pathname.includes('/cart');
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <View style={styles.container}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        </Stack>
-        {shouldShowTabBar && (
-          <BottomTabBar 
-            activeTab={getActiveTab()} 
-            onTabPress={handleTabPress} 
-          />
-        )}
-        <StatusBar style="auto" />
-      </View>
-    </ThemeProvider>
+    <CartProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <View style={styles.container}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          </Stack>
+          {shouldShowTabBar && (
+            <BottomTabBar 
+              activeTab={getActiveTab()} 
+              onTabPress={handleTabPress} 
+            />
+          )}
+          <StatusBar style="auto" />
+        </View>
+      </ThemeProvider>
+    </CartProvider>
   );
 }
 
