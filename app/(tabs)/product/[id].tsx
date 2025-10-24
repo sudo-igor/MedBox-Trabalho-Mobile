@@ -16,6 +16,7 @@ import { useCart } from '@/contexts/CartContext';
 
 const { width } = Dimensions.get('window');
 
+// Dados mockados - depois você substituirá por dados reais
 const productData = {
   id: '1',
   name: 'Remédio',
@@ -305,7 +306,7 @@ export default function ProductDetailScreen() {
       <View style={styles.bottomBar}>
         <View style={styles.priceContainer}>
           <Text style={styles.bottomPrice}>
-            R$ {productData.price.toFixed(2).replace('.', ',')}
+            R$ {(productData.price * (itemQuantity || 1)).toFixed(2).replace('.', ',')}
           </Text>
         </View>
         

@@ -53,7 +53,7 @@ export default function AddressSelectionScreen() {
   const handleSelectAddress = (addressId: string) => {
     // Aqui você pode salvar o endereço selecionado e continuar o fluxo
     console.log('Endereço selecionado:', addressId);
-    // Navegar para próxima tela (pagamento, por exemplo)
+    router.push('/(tabs)/payment');
   };
 
   return (

@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import BottomTabBar from '@/components/ui/BottomTabBar';
 import { CartProvider } from '@/contexts/CartContext';
+import { OrdersProvider } from '@/contexts/OrdersContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',

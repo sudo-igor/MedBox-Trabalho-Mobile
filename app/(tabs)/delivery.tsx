@@ -31,9 +31,12 @@ export default function DeliveryScreen() {
   };
 
   const handleSelectPharmacy = () => {
-    setShowPharmacyModal(false);
-    // Aqui você pode adicionar lógica para confirmar a farmácia selecionada
-    console.log('Farmácia selecionada');
+    // Navega primeiro
+    router.push('/(tabs)/payment');
+    // Fecha o modal depois
+    setTimeout(() => {
+      setShowPharmacyModal(false);
+    }, 100);
   };
 
   const handleChooseOtherPharmacy = () => {
