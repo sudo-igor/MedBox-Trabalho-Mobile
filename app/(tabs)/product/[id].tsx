@@ -16,7 +16,6 @@ import { useCart } from '@/contexts/CartContext';
 
 const { width } = Dimensions.get('window');
 
-// Dados mockados - depois você substituirá por dados reais
 const productData = {
   id: '1',
   name: 'Remédio',

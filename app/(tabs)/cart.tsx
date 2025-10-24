@@ -41,8 +41,7 @@ export default function CartScreen() {
   };
 
   const handleCheckout = () => {
-    // Implementar checkout
-    console.log('Ir para checkout');
+    router.push('/(tabs)/delivery');
   };
 
   if (items.length === 0) {
