@@ -43,26 +43,33 @@ export default function RootLayout() {
   // Verifica se deve mostrar a barra de navegação
   const shouldShowTabBar = !pathname.includes('/modal') && 
                           !pathname.includes('/product') && 
-                          !pathname.includes('/cart');
+                          !pathname.includes('/cart') &&
+                          !pathname.includes('/delivery') &&
+                          !pathname.includes('/payment') &&
+                          !pathname.includes('/pharmacy') &&
+                          !pathname.includes('/address') &&
+                          !pathname.includes('/order-confirmation');
 
   return (
-    <CartProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <View style={styles.container}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-          </Stack>
-          {shouldShowTabBar && (
-            <BottomTabBar 
-              activeTab={getActiveTab()} 
-              onTabPress={handleTabPress} 
-            />
-          )}
-          <StatusBar style="auto" />
-        </View>
-      </ThemeProvider>
-    </CartProvider>
+    <OrdersProvider>
+      <CartProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <View style={styles.container}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+            </Stack>
+            {shouldShowTabBar && (
+              <BottomTabBar 
+                activeTab={getActiveTab()} 
+                onTabPress={handleTabPress} 
+              />
+            )}
+            <StatusBar style="auto" />
+          </View>
+        </ThemeProvider>
+      </CartProvider>
+    </OrdersProvider>
   );
 }
 
