@@ -23,7 +23,7 @@ export default function RootLayout() {
       index: '/(tabs)',
       search: '/(tabs)/search',
       orders: '/(tabs)/orders',
-      more: '/(tabs)/more',
+      profile: '/(tabs)/profile',
     };
 
     if (routes[tabName]) {
@@ -36,7 +36,7 @@ export default function RootLayout() {
     if (pathname === '/(tabs)' || pathname === '/') return 'index';
     if (pathname.includes('/search')) return 'search';
     if (pathname.includes('/orders')) return 'orders';
-    if (pathname.includes('/more')) return 'more';
+    if (pathname.includes('/profile')) return 'profile';
     return 'index';
   };
 

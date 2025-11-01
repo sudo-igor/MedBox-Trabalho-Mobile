@@ -86,6 +86,11 @@ export default function HomeScreen() {
     router.push('/(tabs)/cart');
   };
 
+  const handleQuickPrescription = () => {
+    console.log('Clicou em compra rápida');
+    router.push('/(tabs)/quick-prescription');
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -125,17 +130,22 @@ export default function HomeScreen() {
         </View>
 
         {/* Compra rápida */}
-        <View style={styles.quickBuyCard}>
+        <TouchableOpacity 
+          style={styles.quickBuyCard}
+          onPress={handleQuickPrescription}
+          activeOpacity={0.7}
+        >
           <MaterialIcons name="description" size={22} color="#0a84ff" />
-          <View style={{ marginLeft: 8 }}>
+          <View style={{ marginLeft: 8, flex: 1 }}>
             <Text style={{ fontWeight: "bold" }}>Compra rápida com receita</Text>
             <Text style={{ fontSize: 12, color: "gray" }}>
               Envie sua receita e cuidaremos da busca
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Promoções */}
+        <Text style={styles.sectionTitle}>Promoções</Text>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 

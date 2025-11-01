@@ -12,7 +12,7 @@ const tabs: TabItem[] = [
   { name: 'index', label: 'Início', icon: 'home-outline' },
   { name: 'search', label: 'Buscar', icon: 'search-outline' },
   { name: 'orders', label: 'Pedidos', icon: 'receipt-outline' },
-  { name: 'more', label: 'Mais', icon: 'menu-outline' },
+  { name: 'profile', label: 'Perfil', icon: 'person-outline' },
 ];
 
 type BottomTabBarProps = {
