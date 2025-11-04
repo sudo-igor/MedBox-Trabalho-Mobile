@@ -53,7 +53,7 @@ export default function filiais() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    margin: 15,
   },
   sectionTitle: {
     fontSize: 20,
@@ -74,8 +74,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 18,
-    paddingHorizontal: 16,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
   },
   menuItemBorder: {
     borderBottomWidth: 1,
