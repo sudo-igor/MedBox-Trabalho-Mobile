@@ -5,21 +5,42 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  StatusBar,
   Image,
+  Alert,
 } from "react-native";
-import { Plus, Edit2, Trash2 } from "lucide-react";
-import { listarProdutos, produto } from "@/scripts/produtosService";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Plus, Edit2, Trash2 } from "lucide-react-native";
+import { listarProdutos, produto, deletarProduto } from "@/scripts/produtosService";
+import { useRouter } from "expo-router";
 
 export default function ProdutosScreen() {
   const [produtos, setProdutos] = useState<produto[]>([]);
   const router = useRouter();
+  const excluirProduto = (produto) => {
+  Alert.alert(
+    'Excluir produto?',
+    `Tem certeza que deseja excluir "${produto.nome}"?`,
+    [
+      {
+        text: 'Cancelar',
+        style: 'cancel',
+      },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: () => {
+          deletarProduto(produto.id);
+          carregar()
+        },
+      },
+    ]
+  );
+};
+const carregar = async () => {
+  const dados = await listarProdutos();
+  setProdutos(dados);
+};
+
   useEffect(() => {
-    const carregar = async () => {
-      const dados = await listarProdutos();
-      setProdutos(dados);
-    };
     carregar();
   }, []);
   return (
@@ -39,13 +60,14 @@ export default function ProdutosScreen() {
         </View>
 
         {/* Lista de produtos */}
+
         <View style={styles.productsList}>
           {produtos.map((produto, index) => (
             <View key={produto.id} style={styles.productCard}>
               {/* Imagem do produto */}
               <View style={styles.productImageContainer}>
                 <Image
-                  source={produto.image}
+                  source={{ uri: produto.imagem }} // Modificar esta linha
                   style={styles.productImage}
                   resizeMode="contain"
                 />
@@ -76,6 +98,7 @@ export default function ProdutosScreen() {
                 <TouchableOpacity
                   style={styles.actionButton}
                   activeOpacity={0.7}
+                  onPress={() => router.push(`/produtos/${produto.id}`)}
                 >
                   <Edit2 size={18} color="#4F46E5" strokeWidth={2} />
                   <Text style={styles.actionButtonText}>Editar</Text>
@@ -83,6 +106,7 @@ export default function ProdutosScreen() {
                 <TouchableOpacity
                   style={[styles.actionButton, styles.deleteButton]}
                   activeOpacity={0.7}
+                  onPress={() => excluirProduto(produto)}
                 >
                   <Trash2 size={18} color="#DC2626" strokeWidth={2} />
                   <Text

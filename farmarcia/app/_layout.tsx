@@ -24,6 +24,8 @@ export default function RootLayout() {
           options={{ presentation: "modal", title: "Modal" }}
         />
         <Stack.Screen name="filiais" options={{ title: "Filiais" }} />
+        <Stack.Screen name="produtos/index" options={{title: "Produtos"}}/>
+        <Stack.Screen name="produtos/add" options={{title: "Novo Produto"}}/>
       </Stack>
       <StatusBar style="auto" />
     </>

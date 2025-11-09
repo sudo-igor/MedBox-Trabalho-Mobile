@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,22 +15,22 @@ import { Upload } from "lucide-react-native";
 
 import {
   produto as Produto,
-  criarProduto,
+  buscarProduto, atualizarProduto,
 } from "@/scripts/produtosService";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from 'expo-image-picker';
-import { File, Directory } from 'expo-file-system';
 import { SafeAreaView } from "react-native-safe-area-context";
 
 
 
-export default function CadastrarProduto() {
+export default function EditarProduto() {
+  const {id} = useLocalSearchParams();
   const [produto, setProduto] = useState<Produto>({
     nome: "",
     quantidade: "",
     preco: "",
     receita: false,
-    imagem: "",
+
   });
   const [imagemUri, setImagemUri] = useState<string | null>(null);
   const router = useRouter();
@@ -88,7 +88,7 @@ export default function CadastrarProduto() {
 
   const handleSalvar = async () => {
     try {
-      const produtoCriado = await criarProduto({
+      const produtoCriado = await atualizarProduto(+id,{
         ...produto,
         imagem: imagemUri || "", // opcional: salva URI junto
       });
@@ -101,6 +101,16 @@ export default function CadastrarProduto() {
       alert("Erro ao salvar o produto!");
     }
   };
+  useEffect(() => {
+    const carregar = async () => {
+      const carregarProduto = await buscarProduto(+id);
+      if (carregarProduto) {
+        setProduto(carregarProduto);
+        setImagemUri(carregarProduto.imagem ?? null)
+      }
+    };
+    carregar();
+  }, [id]);
 
   return (
     <SafeAreaView  style={styles.container}>
@@ -399,4 +409,5 @@ const styles = StyleSheet.create({
     borderRadius: 8, // Se o seu uploadBox tiver borda
     resizeMode: "cover", // Para cobrir a área sem distorcer muito
   },
-});
+})
+

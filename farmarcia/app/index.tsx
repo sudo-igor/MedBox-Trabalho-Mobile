@@ -9,6 +9,7 @@ import {
   StatusBar,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function FarmaciaScreen() {
   const params = useLocalSearchParams();
@@ -24,20 +25,20 @@ export default function FarmaciaScreen() {
   ];
 
   const menuItems = [
-    { label: "Horários de funcionamento" },
-    { label: "Central de ajuda" },
+    { label: "Horários de funcionamento", link: ""},
+    { label: "Central de ajuda", link: "" } ,
+    {label: "Trocar de Loja", link: "/filiais"}, ,
   ];
   const [IsOpen, setIsOpen] = useState(lojaAberta);
   const toggleSwitch = () => setIsOpen((previousState) => !previousState);
   return (
-    <View style={styles.container}>
+    <SafeAreaView  style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1F2937" />
 
       {/* Header com gradiente visual */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.welcomeText}>Bem-vindo(a) 👋</Text>
             <Text style={styles.pharmacyName}>{nomeFarmacia}</Text>
             <TouchableOpacity
               onPress={toggleSwitch}
@@ -53,12 +54,8 @@ export default function FarmaciaScreen() {
               )}
             </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={() => router.push("/filiais")}
-            style={styles.switchButton}
-          >
-            <Text style={styles.switchButtonText}>Trocar loja</Text>
-          </TouchableOpacity>
+          
+
         </View>
       </View>
 
@@ -94,6 +91,7 @@ export default function FarmaciaScreen() {
                   styles.menuItem,
                   index !== menuItems.length - 1 && styles.menuItemBorder,
                 ]}
+                onPress={() => router.push(item.link)}
                 activeOpacity={0.7}
               >
                 <View style={styles.menuItemLeft}>
@@ -106,7 +104,7 @@ export default function FarmaciaScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
-    </View>
+    </SafeAreaView >
   );
 }
 
@@ -127,7 +125,7 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     paddingHorizontal: 24,
-    flexDirection: "row",
+    flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
