@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useCart } from '@/contexts/CartContext';
+import { useFavorites } from '@/contexts/FavoritesContext';
 
 const { width } = Dimensions.get('window');
 
@@ -50,7 +51,6 @@ export default function ProductDetailScreen() {
     cart = useCart();
   } catch (error) {
     console.error('CartContext não disponível:', error);
-    // Fallback caso o contexto não esteja disponível
     cart = {
       addItem: (item: any) => {
         Alert.alert('Erro', 'Sistema de carrinho não disponível');
@@ -61,13 +61,14 @@ export default function ProductDetailScreen() {
   }
   
   const { addItem, getItemQuantity, updateQuantity } = cart;
+  const { toggleProductFavorite, isProductFavorite } = useFavorites();
   
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [isPharmacyFavorite, setIsPharmacyFavorite] = useState(false);
   const [sobreExpanded, setSobreExpanded] = useState(false);
   const [bulaExpanded, setBulaExpanded] = useState(false);
+  const [isPharmacyFavorite, setIsPharmacyFavorite] = useState(false);
 
   const itemQuantity = getItemQuantity(productData.id);
+  const isFavorite = isProductFavorite(productData.id);
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -87,11 +88,17 @@ export default function ProductDetailScreen() {
   };
 
   const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
+    toggleProductFavorite({
+      id: productData.id,
+      name: productData.name,
+      price: productData.price,
+      image: productData.image,
+    });
   };
 
   const togglePharmacyFavorite = () => {
-    setIsPharmacyFavorite(!isPharmacyFavorite);
+    // Implementar favorito de farmácia
+    console.log('Favoritar farmácia');
   };
 
   const handleAddToCart = () => {
@@ -571,8 +578,7 @@ const styles = StyleSheet.create({
   cartActionsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    flex: 1,
+    gap: 8,
   },
   quantityControlsBottom: {
     flexDirection: 'row',
@@ -602,8 +608,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FF0000',
     paddingVertical: 14,
+    paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   goToCartButtonText: {
     fontSize: 14,

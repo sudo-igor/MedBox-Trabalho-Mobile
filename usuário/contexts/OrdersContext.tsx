@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type OrderItem = {
   id: string;
@@ -23,16 +24,54 @@ export type Order = {
 
 type OrdersContextType = {
   orders: Order[];
-  addOrder: (order: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>) => void;
+  addOrder: (order: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>) => Promise<Order>;
   getOrderById: (id: string) => Order | undefined;
+  updateOrderStatus: (id: string, status: Order['status']) => Promise<void>;
+  isLoading: boolean;
 };
 
 const OrdersContext = createContext<OrdersContextType | undefined>(undefined);
 
+const STORAGE_KEY = '@medbox:orders';
+
 export function OrdersProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const addOrder = (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>) => {
+  // Carregar pedidos ao iniciar
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  // Salvar pedidos sempre que houver mudanças
+  useEffect(() => {
+    if (!isLoading) {
+      saveOrders();
+    }
+  }, [orders]);
+
+  const loadOrders = async () => {
+    try {
+      const ordersData = await AsyncStorage.getItem(STORAGE_KEY);
+      if (ordersData) {
+        setOrders(JSON.parse(ordersData));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveOrders = async () => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+    } catch (error) {
+      console.error('Erro ao salvar pedidos:', error);
+    }
+  };
+
+  const addOrder = async (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>): Promise<Order> => {
     const newOrder: Order = {
       ...orderData,
       id: Date.now().toString(),
@@ -45,12 +84,28 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     return newOrder;
   };
 
+  const updateOrderStatus = async (id: string, status: Order['status']) => {
+    setOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.id === id ? { ...order, status } : order
+      )
+    );
+  };
+
   const getOrderById = (id: string) => {
     return orders.find((order) => order.id === id);
   };
 
   return (
-    <OrdersContext.Provider value={{ orders, addOrder, getOrderById }}>
+    <OrdersContext.Provider 
+      value={{ 
+        orders, 
+        addOrder, 
+        getOrderById, 
+        updateOrderStatus,
+        isLoading 
+      }}
+    >
       {children}
     </OrdersContext.Provider>
   );

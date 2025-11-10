@@ -29,6 +29,10 @@ export default function ProfileScreen() {
     console.log('Ofertas personalizadas');
   };
 
+  const handleFavorites = () => {
+    router.push('/(tabs)/favorites');
+  };
+
   const handleAddresses = () => {
     router.push('/(tabs)/address-selection');
   };

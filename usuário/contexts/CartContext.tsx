@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type CartItem = {
   id: string;
@@ -17,12 +18,49 @@ type CartContextType = {
   getTotalPrice: () => number;
   getTotalItems: () => number;
   getItemQuantity: (id: string) => number;
+  isLoading: boolean;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const STORAGE_KEY = '@medbox:cart';
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Carregar carrinho ao iniciar
+  useEffect(() => {
+    loadCart();
+  }, []);
+
+  // Salvar carrinho sempre que houver mudanças
+  useEffect(() => {
+    if (!isLoading) {
+      saveCart();
+    }
+  }, [items]);
+
+  const loadCart = async () => {
+    try {
+      const cartData = await AsyncStorage.getItem(STORAGE_KEY);
+      if (cartData) {
+        setItems(JSON.parse(cartData));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar carrinho:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveCart = async () => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch (error) {
+      console.error('Erro ao salvar carrinho:', error);
+    }
+  };
 
   const addItem = (item: Omit<CartItem, 'quantity'>) => {
     setItems((prevItems) => {
@@ -52,8 +90,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setItems([]);
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Erro ao limpar carrinho:', error);
+    }
   };
 
   const getTotalPrice = () => {
@@ -80,6 +123,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         getTotalPrice,
         getTotalItems,
         getItemQuantity,
+        isLoading,
       }}
     >
       {children}

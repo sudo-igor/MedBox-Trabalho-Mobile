@@ -7,6 +7,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import BottomTabBar from '@/components/ui/BottomTabBar';
 import { CartProvider } from '@/contexts/CartContext';
 import { OrdersProvider } from '@/contexts/OrdersContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { FavoritesProvider } from '@/contexts/FavoritesContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -25,7 +27,7 @@ export default function RootLayout() {
       orders: '/(tabs)/orders',
       profile: '/(tabs)/profile',
     };
-
+    
     if (routes[tabName]) {
       router.push(routes[tabName] as any);
     }
@@ -51,25 +53,29 @@ export default function RootLayout() {
                           !pathname.includes('/order-confirmation');
 
   return (
-    <OrdersProvider>
-      <CartProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <View style={styles.container}>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-            </Stack>
-            {shouldShowTabBar && (
-              <BottomTabBar 
-                activeTab={getActiveTab()} 
-                onTabPress={handleTabPress} 
-              />
-            )}
-            <StatusBar style="auto" />
-          </View>
-        </ThemeProvider>
-      </CartProvider>
-    </OrdersProvider>
+    <AuthProvider>
+      <FavoritesProvider>
+        <OrdersProvider>
+          <CartProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <View style={styles.container}>
+                <Stack>
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+                </Stack>
+                {shouldShowTabBar && (
+                  <BottomTabBar 
+                    activeTab={getActiveTab()} 
+                    onTabPress={handleTabPress} 
+                  />
+                )}
+                <StatusBar style="auto" />
+              </View>
+            </ThemeProvider>
+          </CartProvider>
+        </OrdersProvider>
+      </FavoritesProvider>
+    </AuthProvider>
   );
 }
 
