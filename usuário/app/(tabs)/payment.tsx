@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Text,
   Image,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +19,9 @@ type PaymentMethod = 'credit_card' | 'pix' | 'cash';
 export default function PaymentScreen() {
   const router = useRouter();
   const { items, getTotalPrice } = useCart();
+  const { addOrder } = useOrders();
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('credit_card');
+  const [showPixModal, setShowPixModal] = useState(false);
 
   const subtotal = getTotalPrice();
   const deliveryFee = 6.00;
@@ -33,9 +36,56 @@ export default function PaymentScreen() {
   };
 
   const handlePayment = () => {
-    // Implementar finalização do pagamento
-    console.log('Finalizar compra com:', selectedPayment);
-    router.push('/(tabs)/order-confirmation');
+    const paymentMethodLabels = {
+      credit_card: 'Cartão de Crédito',
+      pix: 'Pix',
+      cash: 'Dinheiro',
+    };
+
+    // Se for PIX, mostra o modal com QR Code
+    if (selectedPayment === 'pix') {
+      setShowPixModal(true);
+      
+      // Após 4 segundos, cria o pedido e redireciona
+      setTimeout(() => {
+        setShowPixModal(false);
+        
+        addOrder({
+          items: items.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+          })),
+          subtotal,
+          deliveryFee,
+          total,
+          deliveryAddress: 'QS 07, Lote 01, Taguatinga Sul',
+          paymentMethod: paymentMethodLabels[selectedPayment],
+        });
+
+        router.push('/(tabs)/order-confirmation');
+      }, 4000);
+    } else {
+      // Para outras formas de pagamento, cria o pedido direto
+      addOrder({
+        items: items.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        subtotal,
+        deliveryFee,
+        total,
+        deliveryAddress: 'QS 07, Lote 01, Taguatinga Sul',
+        paymentMethod: paymentMethodLabels[selectedPayment],
+      });
+
+      router.push('/(tabs)/order-confirmation');
+    }
   };
 
   return (
@@ -205,6 +255,50 @@ export default function PaymentScreen() {
           <Text style={styles.buyButtonText}>Comprar</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Modal PIX */}
+      <Modal
+        visible={showPixModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={styles.pixModalOverlay}>
+          <View style={styles.pixModalContent}>
+            <View style={styles.pixHeader}>
+              <Ionicons name="qr-code" size={32} color="#00C2A3" />
+              <Text style={styles.pixTitle}>Pagamento via Pix</Text>
+            </View>
+
+            <Text style={styles.pixSubtitle}>
+              Escaneie o QR Code para pagar
+            </Text>
+
+            {/* QR Code placeholder */}
+            <View style={styles.qrCodeContainer}>
+              <View style={styles.qrCodePlaceholder}>
+                <Ionicons name="qr-code-outline" size={180} color="#333" />
+              </View>
+            </View>
+
+            <View style={styles.pixAmountContainer}>
+              <Text style={styles.pixAmountLabel}>Valor a pagar</Text>
+              <Text style={styles.pixAmountValue}>
+                R$ {total.toFixed(2).replace('.', ',')}
+              </Text>
+            </View>
+
+            <View style={styles.pixLoading}>
+              <View style={styles.loadingDots}>
+                <View style={[styles.dot, styles.dot1]} />
+                <View style={[styles.dot, styles.dot2]} />
+                <View style={[styles.dot, styles.dot3]} />
+              </View>
+              <Text style={styles.pixLoadingText}>Aguardando pagamento...</Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -411,5 +505,95 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFF',
+  },
+  pixModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pixModalContent: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 32,
+    width: '85%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  pixHeader: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  pixTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#333',
+    marginTop: 12,
+  },
+  pixSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  qrCodeContainer: {
+    backgroundColor: '#FFF',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  qrCodePlaceholder: {
+    width: 200,
+    height: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F9F9F9',
+    borderRadius: 8,
+  },
+  pixAmountContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  pixAmountLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  pixAmountValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#00C2A3',
+  },
+  pixLoading: {
+    alignItems: 'center',
+  },
+  loadingDots: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#00C2A3',
+  },
+  dot1: {
+    opacity: 0.3,
+  },
+  dot2: {
+    opacity: 0.6,
+  },
+  dot3: {
+    opacity: 1,
+  },
+  pixLoadingText: {
+    fontSize: 14,
+    color: '#666',
   },
 });

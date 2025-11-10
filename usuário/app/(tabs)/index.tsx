@@ -1,5 +1,5 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Image,
   ScrollView,
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Imagens do projeto
 const banner1 = require("../../assets/images/banner1.jpg");
@@ -31,13 +32,36 @@ const logoRosario = require("../../assets/images/logo-rosario.jpg");
 export default function HomeScreen() {
   const router = useRouter();
   const { getTotalItems } = useCart();
+  
+  let isLoading = false;
+  let isAuthenticated = true; // Modo convidado por padrão
+  
+  try {
+    const auth = useAuth();
+    isLoading = auth.isLoading;
+    isAuthenticated = auth.isAuthenticated;
+  } catch (error) {
+    console.log('AuthContext não disponível, usando modo convidado');
+  }
+  
   const cartItemsCount = getTotalItems();
+
+  // Comentado temporariamente para permitir acesso sem login
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isLoading, isAuthenticated]);
 
   const categorias = [
     { id: "1", nome: "Medicamentos", imagem: medicamentosImg },
     { id: "2", nome: "Saúde", imagem: saudeImg },
     { id: "3", nome: "Beleza", imagem: belezaImg },
     { id: "4", nome: "Cosméticos", imagem: cosmeticosImg },
+    { id: "5", nome: "Higiene", imagem: medicamentosImg },
+    { id: "6", nome: "Bebê", imagem: saudeImg },
+    { id: "7", nome: "Fitness", imagem: belezaImg },
+    { id: "8", nome: "Dermocosméticos", imagem: cosmeticosImg },
   ];
 
   const produtos = [
@@ -86,6 +110,11 @@ export default function HomeScreen() {
     router.push('/(tabs)/cart');
   };
 
+  const handleQuickPrescription = () => {
+    console.log('Clicou em compra rápida');
+    router.push('/(tabs)/quick-prescription');
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -125,17 +154,22 @@ export default function HomeScreen() {
         </View>
 
         {/* Compra rápida */}
-        <View style={styles.quickBuyCard}>
+        <TouchableOpacity 
+          style={styles.quickBuyCard}
+          onPress={handleQuickPrescription}
+          activeOpacity={0.7}
+        >
           <MaterialIcons name="description" size={22} color="#0a84ff" />
-          <View style={{ marginLeft: 8 }}>
+          <View style={{ marginLeft: 8, flex: 1 }}>
             <Text style={{ fontWeight: "bold" }}>Compra rápida com receita</Text>
             <Text style={{ fontSize: 12, color: "gray" }}>
               Envie sua receita e cuidaremos da busca
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Promoções */}
+        <Text style={styles.sectionTitle}>Promoções</Text>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 

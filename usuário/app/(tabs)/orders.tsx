@@ -22,10 +22,26 @@ export default function OrdersScreen() {
     router.push(`/(tabs)/order-details/${orderId}` as any);
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.push('/(tabs)');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleBack}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-back" size={24} color="#333" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Meus Pedidos</Text>
+        <View style={styles.backButton} />
       </View>
 
       <ScrollView style={styles.content}>
@@ -90,11 +106,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#FFF',
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
+  },
+  backButton: {
+    padding: 4,
+    width: 32,
   },
   headerTitle: {
     fontSize: 24,
