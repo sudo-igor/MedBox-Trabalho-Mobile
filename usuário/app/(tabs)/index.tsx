@@ -34,19 +34,21 @@ export default function HomeScreen() {
   const { getTotalItems } = useCart();
   
   let isLoading = false;
-  let isAuthenticated = true; // Modo convidado por padrão
+  let isAuthenticated = false; // Requer login por padrão
   
   try {
     const auth = useAuth();
     isLoading = auth.isLoading;
     isAuthenticated = auth.isAuthenticated;
   } catch (error) {
-    console.log('AuthContext não disponível, usando modo convidado');
+    console.log('AuthContext não disponível');
+    isLoading = false;
+    isAuthenticated = false;
   }
   
   const cartItemsCount = getTotalItems();
 
-  // Comentado temporariamente para permitir acesso sem login
+  // Redireciona para login se não estiver autenticado
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.replace('/login');
