@@ -27,7 +27,7 @@ export default function RootLayout() {
       orders: '/(tabs)/orders',
       profile: '/(tabs)/profile',
     };
-    
+
     if (routes[tabName]) {
       router.push(routes[tabName] as any);
     }
@@ -50,7 +50,14 @@ export default function RootLayout() {
                           !pathname.includes('/payment') &&
                           !pathname.includes('/pharmacy') &&
                           !pathname.includes('/address') &&
-                          !pathname.includes('/order-confirmation');
+                          !pathname.includes('/login') &&
+                          !pathname.includes('/register') &&
+                          !pathname.includes('/order-confirmation') &&
+                          !pathname.includes('/quick-prescription') &&
+                          !pathname.includes('/prescription') &&
+                          !pathname.includes('/analyzing') &&
+                          pathname !== '/login' &&
+                          pathname !== '/register';
 
   return (
     <AuthProvider>
@@ -61,6 +68,8 @@ export default function RootLayout() {
               <View style={styles.container}>
                 <Stack>
                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="login" options={{ headerShown: false }} />
+                  <Stack.Screen name="register" options={{ headerShown: false }} />
                   <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
                 </Stack>
                 {shouldShowTabBar && (

@@ -5,13 +5,16 @@ import {
   ScrollView,
   TouchableOpacity,
   Text,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { user, isAuthenticated, signOut } = useAuth();
 
   const handleManageProfile = () => {
     router.push('/(tabs)/manage-profile');
@@ -49,6 +52,37 @@ export default function ProfileScreen() {
     console.log('Configurações');
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Sair',
+      'Tem certeza que deseja sair da sua conta?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/login' as any);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleLogin = () => {
+    router.push('/login' as any);
+  };
+
+  // Pega as iniciais do nome para o avatar
+  const getInitials = (name: string) => {
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
@@ -57,20 +91,41 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* User Profile Card */}
-        <TouchableOpacity
-          style={styles.profileCard}
-          onPress={handleManageProfile}
-          activeOpacity={0.7}
-        >
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={32} color="#FFF" />
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Ana Maria Santos</Text>
-            <Text style={styles.profileEmail}>ana.santos@email.com</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#999" />
-        </TouchableOpacity>
+        {isAuthenticated && user ? (
+          <TouchableOpacity
+            style={styles.profileCard}
+            onPress={handleManageProfile}
+            activeOpacity={0.7}
+          >
+            <View style={styles.avatarContainer}>
+              {user.avatar ? (
+                <Text style={styles.avatarText}>{getInitials(user.name)}</Text>
+              ) : (
+                <Text style={styles.avatarText}>{getInitials(user.name)}</Text>
+              )}
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>{user.name}</Text>
+              <Text style={styles.profileEmail}>{user.email}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.profileCard}
+            onPress={handleLogin}
+            activeOpacity={0.7}
+          >
+            <View style={styles.avatarContainer}>
+              <Ionicons name="person" size={32} color="#FFF" />
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>Fazer Login</Text>
+              <Text style={styles.profileEmail}>Entre para acessar seus dados</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+        )}
 
         {/* Main Options */}
         <View style={styles.section}>
@@ -84,6 +139,20 @@ export default function ProfileScreen() {
                 <Ionicons name="receipt-outline" size={24} color="#1E90FF" />
               </View>
               <Text style={styles.menuItemText}>Meus Pedidos</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={handleFavorites}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: '#FFEBEE' }]}>
+                <Ionicons name="heart-outline" size={24} color="#EF4444" />
+              </View>
+              <Text style={styles.menuItemText}>Favoritos</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
@@ -118,33 +187,35 @@ export default function ProfileScreen() {
         </View>
 
         {/* Account Options */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Conta</Text>
+        {isAuthenticated && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Conta</Text>
 
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={handleAddresses}
-            activeOpacity={0.7}
-          >
-            <View style={styles.menuItemLeft}>
-              <Ionicons name="location-outline" size={24} color="#333" />
-              <Text style={styles.menuItemText}>Endereços</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleAddresses}
+              activeOpacity={0.7}
+            >
+              <View style={styles.menuItemLeft}>
+                <Ionicons name="location-outline" size={24} color="#333" />
+                <Text style={styles.menuItemText}>Endereços</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#999" />
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={handlePaymentMethods}
-            activeOpacity={0.7}
-          >
-            <View style={styles.menuItemLeft}>
-              <Ionicons name="card-outline" size={24} color="#333" />
-              <Text style={styles.menuItemText}>Formas de Pagamento</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#999" />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handlePaymentMethods}
+              activeOpacity={0.7}
+            >
+              <View style={styles.menuItemLeft}>
+                <Ionicons name="card-outline" size={24} color="#333" />
+                <Text style={styles.menuItemText}>Formas de Pagamento</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#999" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Support Options */}
         <View style={styles.section}>
@@ -174,6 +245,20 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
         </View>
+
+        {/* Logout Button */}
+        {isAuthenticated && (
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="log-out-outline" size={24} color="#EF4444" />
+              <Text style={styles.logoutText}>Sair da Conta</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -217,6 +302,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+  },
+  avatarText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFF',
   },
   profileInfo: {
     flex: 1,
@@ -269,5 +359,18 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontSize: 16,
     color: '#333',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  logoutText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#EF4444',
+    marginLeft: 8,
   },
 });
