@@ -1,5 +1,5 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 // Imagens do projeto
 const banner1 = require("../../assets/images/banner1.jpg");
@@ -32,9 +33,14 @@ const logoRosario = require("../../assets/images/logo-rosario.jpg");
 export default function HomeScreen() {
   const router = useRouter();
   const { getTotalItems } = useCart();
+  const { isPharmacyFavorite, togglePharmacyFavorite } = useFavorites();
+  
+  const [selectedFilter, setSelectedFilter] = useState<'none' | 'free' | 'distance'>('none');
+  const [sortOrder, setSortOrder] = useState<'rating' | 'distance' | 'time'>('rating');
+  const [showSortMenu, setShowSortMenu] = useState(false);
   
   let isLoading = false;
-  let isAuthenticated = false; // Requer login por padrão
+  let isAuthenticated = false;
   
   try {
     const auth = useAuth();
@@ -77,31 +83,216 @@ export default function HomeScreen() {
     { 
       id: "1", 
       nome: "Drogasil - Taguatinga Sul", 
-      distancia: "0.6 km", 
-      tempo: "15 - 30 min", 
-      entrega: "Entrega grátis a partir de R$ 29", 
+      distancia: "0.6 km",
+      distanciaNum: 0.6,
+      tempo: "15 - 30 min",
+      tempoNum: 15,
+      entrega: "Entrega grátis a partir de R$ 29",
+      entregaGratis: true,
+      minOrder: 29,
+      address: "QSA 01, Lote 01, Taguatinga Sul",
+      rating: 4.8,
       logo: logoDrogasil 
     },
     { 
       id: "2", 
       nome: "Drogasil - Águas Claras", 
-      distancia: "3.7 km", 
-      tempo: "35 - 50 min", 
-      entrega: "Entrega grátis a partir de R$ 29", 
+      distancia: "3.7 km",
+      distanciaNum: 3.7,
+      tempo: "35 - 50 min",
+      tempoNum: 35,
+      entrega: "Entrega grátis a partir de R$ 29",
+      entregaGratis: true,
+      minOrder: 29,
+      address: "Rua 7, Lote 300, Águas Claras",
+      rating: 4.7,
       logo: logoDrogasil 
     },
     { 
       id: "3", 
       nome: "Drogaria Rosário - Guará 1", 
-      distancia: "8 km", 
-      tempo: "25 - 40 min", 
-      entrega: "Entrega grátis a partir de R$ 35", 
+      distancia: "8 km",
+      distanciaNum: 8,
+      tempo: "25 - 40 min",
+      tempoNum: 25,
+      entrega: "Entrega grátis a partir de R$ 35",
+      entregaGratis: true,
+      minOrder: 35,
+      address: "QE 11, Área Especial A, Guará 1",
+      rating: 4.6,
       logo: logoRosario 
+    },
+    { 
+      id: "4", 
+      nome: "Drogasil - Ceilândia Norte", 
+      distancia: "5.2 km",
+      distanciaNum: 5.2,
+      tempo: "30 - 45 min",
+      tempoNum: 30,
+      entrega: "Entrega R$ 5,90",
+      entregaGratis: false,
+      minOrder: 0,
+      address: "QNN 14, Área Especial, Ceilândia Norte",
+      rating: 4.5,
+      logo: logoDrogasil 
+    },
+    { 
+      id: "5", 
+      nome: "Drogaria Rosário - Samambaia", 
+      distancia: "12 km",
+      distanciaNum: 12,
+      tempo: "40 - 55 min",
+      tempoNum: 40,
+      entrega: "Entrega grátis a partir de R$ 40",
+      entregaGratis: true,
+      minOrder: 40,
+      address: "QS 303, Conjunto 01, Samambaia Sul",
+      rating: 4.3,
+      logo: logoRosario 
+    },
+    { 
+      id: "6", 
+      nome: "Drogasil - Vicente Pires", 
+      distancia: "6.8 km",
+      distanciaNum: 6.8,
+      tempo: "35 - 50 min",
+      tempoNum: 35,
+      entrega: "Entrega grátis a partir de R$ 29",
+      entregaGratis: true,
+      minOrder: 29,
+      address: "Rua 8, Lote 25, Vicente Pires",
+      rating: 4.9,
+      logo: logoDrogasil 
+    },
+    { 
+      id: "7", 
+      nome: "Drogaria Rosário - Taguatinga Centro", 
+      distancia: "2.1 km",
+      distanciaNum: 2.1,
+      tempo: "20 - 35 min",
+      tempoNum: 20,
+      entrega: "Entrega grátis a partir de R$ 35",
+      entregaGratis: true,
+      minOrder: 35,
+      address: "Pistão Sul, Lote 05, Taguatinga Centro",
+      rating: 4.4,
+      logo: logoRosario 
+    },
+    { 
+      id: "8", 
+      nome: "Drogasil - Águas Claras Shopping", 
+      distancia: "4.5 km",
+      distanciaNum: 4.5,
+      tempo: "25 - 40 min",
+      tempoNum: 25,
+      entrega: "Entrega grátis a partir de R$ 29",
+      entregaGratis: true,
+      minOrder: 29,
+      address: "Av. das Araucárias, Shopping Águas Claras",
+      rating: 4.8,
+      logo: logoDrogasil 
+    },
+    { 
+      id: "9", 
+      nome: "Drogaria Rosário - Sol Nascente", 
+      distancia: "9.3 km",
+      distanciaNum: 9.3,
+      tempo: "35 - 50 min",
+      tempoNum: 35,
+      entrega: "Entrega R$ 7,90",
+      entregaGratis: false,
+      minOrder: 0,
+      address: "Trecho 02, Conjunto 12, Sol Nascente",
+      rating: 4.1,
+      logo: logoRosario 
+    },
+    { 
+      id: "10", 
+      nome: "Drogasil - Arniqueiras", 
+      distancia: "7.4 km",
+      distanciaNum: 7.4,
+      tempo: "30 - 45 min",
+      tempoNum: 30,
+      entrega: "Entrega grátis a partir de R$ 35",
+      entregaGratis: true,
+      minOrder: 35,
+      address: "Setor Habitacional Arniqueira, Quadra 04",
+      rating: 4.6,
+      logo: logoDrogasil 
+    },
+    { 
+      id: "11", 
+      nome: "Drogaria Rosário - Recanto das Emas", 
+      distancia: "15 km",
+      distanciaNum: 15,
+      tempo: "45 - 60 min",
+      tempoNum: 45,
+      entrega: "Entrega grátis a partir de R$ 40",
+      entregaGratis: true,
+      minOrder: 40,
+      address: "Quadra 102, Área Especial, Recanto das Emas",
+      rating: 4.2,
+      logo: logoRosario 
+    },
+    { 
+      id: "12", 
+      nome: "Drogasil - Park Shopping", 
+      distancia: "10.5 km",
+      distanciaNum: 10.5,
+      tempo: "40 - 55 min",
+      tempoNum: 40,
+      entrega: "Entrega grátis a partir de R$ 29",
+      entregaGratis: true,
+      minOrder: 29,
+      address: "SAI/SO, Área 6580, Park Shopping",
+      rating: 4.7,
+      logo: logoDrogasil 
     },
   ];
 
+  // Função para ordenar e filtrar farmácias
+  const getFilteredAndSortedPharmacies = () => {
+    let filtered = [...farmacias];
+
+    // Aplicar filtro de entrega grátis
+    if (selectedFilter === 'free') {
+      filtered = filtered.filter(f => f.entregaGratis);
+    }
+
+    // Aplicar ordenação
+    filtered.sort((a, b) => {
+      if (sortOrder === 'distance') {
+        return a.distanciaNum - b.distanciaNum;
+      } else if (sortOrder === 'time') {
+        return a.tempoNum - b.tempoNum;
+      } else {
+        // rating (padrão)
+        return b.rating - a.rating;
+      }
+    });
+
+    return filtered;
+  };
+
+  const farmaciasFiltered = getFilteredAndSortedPharmacies();
+
   const handleProductPress = (productId: string) => {
     router.push(`/(tabs)/product/${productId}` as any);
+  };
+
+  const handlePharmacyPress = (pharmacyId: string) => {
+    router.push(`/(tabs)/pharmacy/${pharmacyId}` as any);
+  };
+
+  const handleFavoritePress = (e: any, farmacia: any) => {
+    e.stopPropagation();
+    togglePharmacyFavorite({
+      id: farmacia.id,
+      name: farmacia.nome,
+      address: farmacia.address,
+      distance: farmacia.distancia,
+      logo: farmacia.logo,
+    });
   };
 
   const handleSearchPress = () => {
@@ -222,36 +413,139 @@ export default function HomeScreen() {
 
         {/* Filtros */}
         <View style={styles.filtersContainer}>
-          <TouchableOpacity style={styles.filterButton}>
-            <Text>Ordenar</Text>
+          <TouchableOpacity 
+            style={[styles.filterButton, showSortMenu && styles.filterButtonActive]}
+            onPress={() => setShowSortMenu(!showSortMenu)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="swap-vertical" size={16} color={showSortMenu ? "#00A859" : "#666"} />
+            <Text style={[styles.filterButtonText, showSortMenu && styles.filterButtonTextActive]}>
+              Ordenar
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={showSortMenu ? "#00A859" : "#666"} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.filterButton}>
-            <Text>Entrega grátis</Text>
+
+          <TouchableOpacity 
+            style={[styles.filterButton, selectedFilter === 'free' && styles.filterButtonActive]}
+            onPress={() => setSelectedFilter(selectedFilter === 'free' ? 'none' : 'free')}
+            activeOpacity={0.7}
+          >
+            <Ionicons 
+              name="gift" 
+              size={16} 
+              color={selectedFilter === 'free' ? "#00A859" : "#666"} 
+            />
+            <Text style={[styles.filterButtonText, selectedFilter === 'free' && styles.filterButtonTextActive]}>
+              Entrega grátis
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.filterButton}>
-            <Text>Distância</Text>
+
+          <TouchableOpacity 
+            style={[styles.filterButton, selectedFilter === 'distance' && styles.filterButtonActive]}
+            onPress={() => {
+              if (selectedFilter === 'distance') {
+                setSelectedFilter('none');
+              } else {
+                setSelectedFilter('distance');
+                setSortOrder('distance');
+              }
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons 
+              name="location" 
+              size={16} 
+              color={selectedFilter === 'distance' ? "#00A859" : "#666"} 
+            />
+            <Text style={[styles.filterButtonText, selectedFilter === 'distance' && styles.filterButtonTextActive]}>
+              Distância
+            </Text>
           </TouchableOpacity>
         </View>
 
+        {/* Sort Menu Dropdown */}
+        {showSortMenu && (
+          <View style={styles.sortMenu}>
+            <TouchableOpacity 
+              style={styles.sortMenuItem}
+              onPress={() => {
+                setSortOrder('rating');
+                setShowSortMenu(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="star" size={18} color="#666" />
+              <Text style={styles.sortMenuText}>Melhor avaliação</Text>
+              {sortOrder === 'rating' && (
+                <Ionicons name="checkmark" size={20} color="#00A859" style={{ marginLeft: 'auto' }} />
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.sortMenuItem}
+              onPress={() => {
+                setSortOrder('distance');
+                setShowSortMenu(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="location" size={18} color="#666" />
+              <Text style={styles.sortMenuText}>Menor distância</Text>
+              {sortOrder === 'distance' && (
+                <Ionicons name="checkmark" size={20} color="#00A859" style={{ marginLeft: 'auto' }} />
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.sortMenuItem}
+              onPress={() => {
+                setSortOrder('time');
+                setShowSortMenu(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="time" size={18} color="#666" />
+              <Text style={styles.sortMenuText}>Entrega mais rápida</Text>
+              {sortOrder === 'time' && (
+                <Ionicons name="checkmark" size={20} color="#00A859" style={{ marginLeft: 'auto' }} />
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Lista de farmácias */}
         <Text style={styles.sectionTitle}>Farmácias</Text>
-        {farmacias.map((farmacia) => (
-          <TouchableOpacity 
-            key={farmacia.id} 
-            style={styles.farmaciaCard}
-            activeOpacity={0.7}
-          >
-            <Image source={farmacia.logo} style={styles.farmaciaLogo} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.farmaciaNome}>{farmacia.nome}</Text>
-              <Text style={styles.farmaciaInfo}>
-                {farmacia.distancia} • {farmacia.tempo}
-              </Text>
-              <Text style={styles.farmaciaEntrega}>{farmacia.entrega}</Text>
-            </View>
-            <Ionicons name="heart-outline" size={22} color="black" />
-          </TouchableOpacity>
-        ))}
+        {farmaciasFiltered.map((farmacia) => {
+          const isFavorite = isPharmacyFavorite(farmacia.id);
+          
+          return (
+            <TouchableOpacity 
+              key={farmacia.id} 
+              style={styles.farmaciaCard}
+              onPress={() => handlePharmacyPress(farmacia.id)}
+              activeOpacity={0.7}
+            >
+              <Image source={farmacia.logo} style={styles.farmaciaLogo} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.farmaciaNome}>{farmacia.nome}</Text>
+                <Text style={styles.farmaciaInfo}>
+                  {farmacia.distancia} • {farmacia.tempo}
+                </Text>
+                <Text style={styles.farmaciaEntrega}>{farmacia.entrega}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={(e) => handleFavoritePress(e, farmacia)}
+                style={styles.favoriteButton}
+              >
+                <Ionicons 
+                  name={isFavorite ? "heart" : "heart-outline"} 
+                  size={22} 
+                  color={isFavorite ? "#EF4444" : "black"} 
+                />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          );
+        })}
 
         {/* Espaço extra no final para não ficar coberto pela barra de navegação */}
         <View style={{ height: 20 }} />
@@ -396,16 +690,60 @@ const styles = StyleSheet.create({
   },
   filtersContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
+    gap: 8,
+    paddingHorizontal: 12,
+    marginBottom: 20,
   },
   filterButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#E5E5E5",
+    backgroundColor: "#FFF",
     borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginRight: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  filterButtonActive: {
+    backgroundColor: "#F0FDF4",
+    borderColor: "#00A859",
+  },
+  filterButtonText: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
+  },
+  filterButtonTextActive: {
+    color: "#00A859",
+    fontWeight: "600",
+  },
+  sortMenu: {
+    backgroundColor: "#FFF",
+    marginHorizontal: 12,
+    marginBottom: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E5E5",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sortMenuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F5F5F5",
+  },
+  sortMenuText: {
+    fontSize: 15,
+    color: "#333",
+    flex: 1,
   },
   farmaciaCard: {
     flexDirection: "row",
@@ -431,5 +769,8 @@ const styles = StyleSheet.create({
   farmaciaEntrega: { 
     fontSize: 12, 
     color: "green" 
+  },
+  favoriteButton: {
+    padding: 8,
   },
 });

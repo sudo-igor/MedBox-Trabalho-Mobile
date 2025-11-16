@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Text,
-  Image,
+  Alert,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,17 +14,23 @@ import { useRouter } from 'expo-router';
 import { useCart } from '@/contexts/CartContext';
 import { useOrders } from '@/contexts/OrdersContext';
 
-type PaymentMethod = 'credit_card' | 'pix' | 'cash';
+const paymentMethodLabels: Record<string, string> = {
+  credit: 'Cartão de Crédito',
+  debit: 'Cartão de Débito',
+  pix: 'Pix',
+  money: 'Dinheiro',
+};
 
 export default function PaymentScreen() {
   const router = useRouter();
-  const { items, getTotalPrice } = useCart();
+  const { items, getTotalPrice, clearCart } = useCart();
   const { addOrder } = useOrders();
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('credit_card');
+  const [selectedPayment, setSelectedPayment] = useState<string>('credit');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [showPixModal, setShowPixModal] = useState(false);
 
   const subtotal = getTotalPrice();
-  const deliveryFee = 6.00;
+  const deliveryFee = 0; // Entrega grátis
   const total = subtotal + deliveryFee;
 
   const handleBack = () => {
@@ -35,22 +41,37 @@ export default function PaymentScreen() {
     }
   };
 
-  const handlePayment = () => {
-    const paymentMethodLabels = {
-      credit_card: 'Cartão de Crédito',
-      pix: 'Pix',
-      cash: 'Dinheiro',
-    };
+  const handlePayment = async () => {
+    if (!selectedPayment) {
+      Alert.alert('Atenção', 'Selecione uma forma de pagamento');
+      return;
+    }
 
-    // Se for PIX, mostra o modal com QR Code
+    // Se for Pix, mostra o QR Code primeiro
     if (selectedPayment === 'pix') {
       setShowPixModal(true);
       
-      // Após 4 segundos, cria o pedido e redireciona
+      // Fecha o modal após 4 segundos e processa o pagamento
       setTimeout(() => {
         setShowPixModal(false);
-        
-        addOrder({
+        processPayment();
+      }, 4000);
+      return;
+    }
+
+    // Para outras formas de pagamento, processa direto
+    processPayment();
+  };
+
+  const processPayment = async () => {
+    setIsProcessing(true);
+
+    try {
+      // Simula processamento do pagamento
+      setTimeout(async () => {
+        // Cria o pedido
+        await addOrder({
+          status: 'preparando',
           items: items.map(item => ({
             id: item.id,
             name: item.name,
@@ -58,35 +79,33 @@ export default function PaymentScreen() {
             quantity: item.quantity,
             image: item.image,
           })),
-          subtotal,
-          deliveryFee,
-          total,
+          pharmacyName: 'Drogasil - Taguatinga Sul',
+          pharmacyLogo: require('@/assets/images/logo-drogasil.jpg'),
           deliveryAddress: 'QS 07, Lote 01, Taguatinga Sul',
+          subtotal: subtotal,
+          deliveryFee: deliveryFee,
+          total: total,
           paymentMethod: paymentMethodLabels[selectedPayment],
         });
 
-        router.push('/(tabs)/order-confirmation');
-      }, 4000);
-    } else {
-      // Para outras formas de pagamento, cria o pedido direto
-      addOrder({
-        items: items.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image,
-        })),
-        subtotal,
-        deliveryFee,
-        total,
-        deliveryAddress: 'QS 07, Lote 01, Taguatinga Sul',
-        paymentMethod: paymentMethodLabels[selectedPayment],
-      });
+        // Limpa o carrinho
+        await clearCart();
 
-      router.push('/(tabs)/order-confirmation');
+        // Navega para tela de confirmação
+        router.push('/(tabs)/order-confirmation');
+      }, 2000);
+    } catch (error) {
+      setIsProcessing(false);
+      Alert.alert('Erro', 'Não foi possível processar o pagamento. Tente novamente.');
     }
   };
+
+  const paymentMethods = [
+    { id: 'credit', icon: 'card', label: 'Cartão de Crédito' },
+    { id: 'debit', icon: 'card-outline', label: 'Cartão de Débito' },
+    { id: 'pix', icon: 'qr-code', label: 'Pix' },
+    { id: 'money', icon: 'cash', label: 'Dinheiro' },
+  ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -103,198 +122,144 @@ export default function PaymentScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Seus Dados */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Seus Dados</Text>
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Ana Maria Santos</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>CPF</Text>
-              <Text style={styles.infoValue}>045.025.200-90</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Telefone</Text>
-              <Text style={styles.infoValue}>(61) 99999-9999</Text>
-            </View>
-          </View>
-        </View>
+        <Text style={styles.sectionTitle}>Escolha a forma de pagamento</Text>
 
-        {/* Endereço */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Endereço</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.addressText}>QS 07, Lote 01,</Text>
-            <Text style={styles.addressText}>Taguatinga Sul - Taguatinga,</Text>
-            <Text style={styles.addressText}>Brasília - DF, 71966-700</Text>
-          </View>
-        </View>
-
-        {/* Produto */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Produto</Text>
-          {items.map((item) => (
-            <View key={item.id} style={styles.productCard}>
-              <Image source={item.image} style={styles.productImage} />
-              <View style={styles.productInfo}>
-                <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.productPrice}>
-                  R$ {item.price.toFixed(2).replace('.', ',')}
-                </Text>
+        {paymentMethods.map((method) => (
+          <TouchableOpacity
+            key={method.id}
+            style={[
+              styles.paymentCard,
+              selectedPayment === method.id && styles.paymentCardActive,
+            ]}
+            onPress={() => setSelectedPayment(method.id)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.paymentCardLeft}>
+              <View
+                style={[
+                  styles.iconContainer,
+                  selectedPayment === method.id && styles.iconContainerActive,
+                ]}
+              >
+                <Ionicons
+                  name={method.icon as any}
+                  size={24}
+                  color={selectedPayment === method.id ? '#00A859' : '#666'}
+                />
               </View>
-              <View style={styles.quantityBadge}>
-                <Text style={styles.quantityText}>{item.quantity}</Text>
-              </View>
+              <Text
+                style={[
+                  styles.paymentLabel,
+                  selectedPayment === method.id && styles.paymentLabelActive,
+                ]}
+              >
+                {method.label}
+              </Text>
             </View>
-          ))}
-        </View>
+            <View
+              style={[
+                styles.radio,
+                selectedPayment === method.id && styles.radioActive,
+              ]}
+            >
+              {selectedPayment === method.id && (
+                <View style={styles.radioDot} />
+              )}
+            </View>
+          </TouchableOpacity>
+        ))}
 
-        {/* Forma de pagamento */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Forma de pagamento</Text>
+        {/* Resumo do Pedido */}
+        <View style={styles.summarySection}>
+          <Text style={styles.sectionTitle}>Resumo do Pedido</Text>
           
-          <TouchableOpacity
-            style={[
-              styles.paymentOption,
-              selectedPayment === 'credit_card' && styles.paymentOptionSelected,
-            ]}
-            onPress={() => setSelectedPayment('credit_card')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.radioButton}>
-              {selectedPayment === 'credit_card' && (
-                <View style={styles.radioButtonInner} />
-              )}
-            </View>
-            <View style={styles.paymentIcon}>
-              <Ionicons name="card" size={20} color="#1E90FF" />
-            </View>
-            <Text style={styles.paymentText}>Cartão de Crédito</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.paymentOption,
-              selectedPayment === 'pix' && styles.paymentOptionSelected,
-            ]}
-            onPress={() => setSelectedPayment('pix')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.radioButton}>
-              {selectedPayment === 'pix' && (
-                <View style={styles.radioButtonInner} />
-              )}
-            </View>
-            <View style={styles.paymentIcon}>
-              <Ionicons name="qr-code" size={20} color="#00C2A3" />
-            </View>
-            <Text style={styles.paymentText}>Pix</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.paymentOption,
-              selectedPayment === 'cash' && styles.paymentOptionSelected,
-            ]}
-            onPress={() => setSelectedPayment('cash')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.radioButton}>
-              {selectedPayment === 'cash' && (
-                <View style={styles.radioButtonInner} />
-              )}
-            </View>
-            <View style={styles.paymentIcon}>
-              <Ionicons name="cash" size={20} color="#00A859" />
-            </View>
-            <Text style={styles.paymentText}>Dinheiro</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Detalhes do Pagamento */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Detalhes do Pagamento</Text>
           <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Total dos produtos</Text>
+              <Text style={styles.summaryLabel}>Subtotal ({items.length} {items.length === 1 ? 'item' : 'itens'})</Text>
               <Text style={styles.summaryValue}>
-                R${subtotal.toFixed(2).replace('.', ',')}
+                R$ {subtotal.toFixed(2).replace('.', ',')}
               </Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Frete</Text>
-              <Text style={styles.summaryValue}>
-                R${deliveryFee.toFixed(2).replace('.', ',')}
-              </Text>
+              <Text style={styles.summaryLabel}>Taxa de Entrega</Text>
+              <Text style={[styles.summaryValue, styles.freeText]}>Grátis</Text>
             </View>
-            <View style={[styles.summaryRow, styles.summaryTotal]}>
-              <Text style={styles.summaryTotalLabel}>Valor Total</Text>
-              <Text style={styles.summaryTotalValue}>
-                R${total.toFixed(2).replace('.', ',')}
+            <View style={styles.divider} />
+            <View style={styles.summaryRow}>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalValue}>
+                R$ {total.toFixed(2).replace('.', ',')}
               </Text>
             </View>
           </View>
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Fixed Bottom Bar */}
+      {/* Bottom Button */}
       <View style={styles.bottomBar}>
-        <View style={styles.totalContainer}>
-          <Text style={styles.totalPrice}>
-            R$ {total.toFixed(2).replace('.', ',')}
-          </Text>
-        </View>
         <TouchableOpacity
-          style={styles.buyButton}
+          style={[styles.confirmButton, isProcessing && styles.confirmButtonDisabled]}
           onPress={handlePayment}
+          disabled={isProcessing}
           activeOpacity={0.8}
         >
-          <Text style={styles.buyButtonText}>Comprar</Text>
+          {isProcessing ? (
+            <>
+              <Ionicons name="time" size={20} color="#FFF" />
+              <Text style={styles.confirmButtonText}>Processando...</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.confirmButtonText}>
+                Confirmar Pagamento • R$ {total.toFixed(2).replace('.', ',')}
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
 
-      {/* Modal PIX */}
+      {/* Modal Pix QR Code */}
       <Modal
         visible={showPixModal}
         transparent
         animationType="fade"
         onRequestClose={() => {}}
       >
-        <View style={styles.pixModalOverlay}>
-          <View style={styles.pixModalContent}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
             <View style={styles.pixHeader}>
-              <Ionicons name="qr-code" size={32} color="#00C2A3" />
+              <Ionicons name="qr-code" size={32} color="#00A859" />
               <Text style={styles.pixTitle}>Pagamento via Pix</Text>
             </View>
 
-            <Text style={styles.pixSubtitle}>
-              Escaneie o QR Code para pagar
-            </Text>
-
-            {/* QR Code placeholder */}
+            {/* QR Code Placeholder */}
             <View style={styles.qrCodeContainer}>
-              <View style={styles.qrCodePlaceholder}>
-                <Ionicons name="qr-code-outline" size={180} color="#333" />
+              <View style={styles.qrCode}>
+                <Ionicons name="qr-code" size={200} color="#000" />
               </View>
             </View>
 
-            <View style={styles.pixAmountContainer}>
-              <Text style={styles.pixAmountLabel}>Valor a pagar</Text>
-              <Text style={styles.pixAmountValue}>
+            <Text style={styles.pixInstructions}>
+              Escaneie o QR Code com o app do seu banco
+            </Text>
+
+            <View style={styles.pixValueContainer}>
+              <Text style={styles.pixValueLabel}>Valor a pagar</Text>
+              <Text style={styles.pixValue}>
                 R$ {total.toFixed(2).replace('.', ',')}
               </Text>
             </View>
 
-            <View style={styles.pixLoading}>
+            {/* Loading indicator */}
+            <View style={styles.loadingContainer}>
               <View style={styles.loadingDots}>
-                <View style={[styles.dot, styles.dot1]} />
-                <View style={[styles.dot, styles.dot2]} />
-                <View style={[styles.dot, styles.dot3]} />
+                <View style={[styles.loadingDot, styles.loadingDot]} />
+                <View style={[styles.loadingDot, styles.loadingDot]} />
+                <View style={[styles.loadingDot, styles.loadingDot]} />
               </View>
-              <Text style={styles.pixLoadingText}>Aguardando pagamento...</Text>
+              <Text style={styles.loadingText}>Aguardando pagamento...</Text>
             </View>
           </View>
         </View>
@@ -330,126 +295,87 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  section: {
-    backgroundColor: '#FFF',
-    marginBottom: 8,
-    padding: 16,
-  },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#333',
-    marginBottom: 12,
+    marginBottom: 16,
+    marginTop: 20,
+    paddingHorizontal: 16,
   },
-  infoCard: {
-    backgroundColor: '#F9F9F9',
-    padding: 12,
-    borderRadius: 8,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  infoLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#333',
-  },
-  addressText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  productCard: {
+  paymentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9F9F9',
-    padding: 12,
-    borderRadius: 8,
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    padding: 16,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E5E5E5',
   },
-  productImage: {
-    width: 50,
-    height: 60,
-    marginRight: 12,
+  paymentCardActive: {
+    borderColor: '#00A859',
+    backgroundColor: '#F0FDF4',
   },
-  productInfo: {
+  paymentCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
-  productName: {
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  iconContainerActive: {
+    backgroundColor: '#E6F7EF',
+  },
+  paymentLabel: {
     fontSize: 15,
     fontWeight: '500',
     color: '#333',
-    marginBottom: 4,
   },
-  productPrice: {
-    fontSize: 14,
+  paymentLabelActive: {
     fontWeight: '600',
-    color: '#333',
+    color: '#00A859',
   },
-  quantityBadge: {
-    backgroundColor: '#F0F0F0',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  quantityText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  paymentOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  paymentOptionSelected: {
-    backgroundColor: '#F9F9F9',
-    marginHorizontal: -16,
-    paddingHorizontal: 16,
-  },
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  radio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#DDD',
-    alignItems: 'center',
+    borderColor: '#E5E5E5',
     justifyContent: 'center',
-    marginRight: 12,
+    alignItems: 'center',
   },
-  radioButtonInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  radioActive: {
+    borderColor: '#00A859',
+  },
+  radioDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: '#00A859',
   },
-  paymentIcon: {
-    marginRight: 12,
-  },
-  paymentText: {
-    fontSize: 15,
-    color: '#333',
+  summarySection: {
+    marginTop: 24,
   },
   summaryCard: {
-    backgroundColor: '#F9F9F9',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: '#FFF',
+    padding: 20,
+    marginHorizontal: 16,
+    borderRadius: 12,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   summaryLabel: {
     fontSize: 14,
@@ -457,119 +383,124 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: 14,
+    fontWeight: '500',
     color: '#333',
   },
-  summaryTotal: {
-    marginTop: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
-    marginBottom: 0,
-  },
-  summaryTotalLabel: {
-    fontSize: 15,
+  freeText: {
+    color: '#00A859',
     fontWeight: '600',
-    color: '#333',
   },
-  summaryTotalValue: {
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 12,
+  },
+  totalLabel: {
     fontSize: 16,
     fontWeight: '700',
     color: '#333',
   },
-  bottomBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
-    gap: 12,
-  },
-  totalContainer: {
-    flex: 1,
-  },
-  totalPrice: {
+  totalValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333',
+    color: '#00A859',
   },
-  buyButton: {
-    backgroundColor: '#FF0000',
-    paddingHorizontal: 48,
-    paddingVertical: 14,
-    borderRadius: 8,
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFF',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  buyButtonText: {
+  confirmButton: {
+    flexDirection: 'row',
+    backgroundColor: '#00A859',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  confirmButtonDisabled: {
+    opacity: 0.7,
+  },
+  confirmButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#FFF',
   },
-  pixModalOverlay: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  pixModalContent: {
+  modalContent: {
     backgroundColor: '#FFF',
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 32,
-    width: '85%',
+    width: '100%',
     maxWidth: 400,
     alignItems: 'center',
   },
   pixHeader: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   pixTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     color: '#333',
     marginTop: 12,
   },
-  pixSubtitle: {
+  qrCodeContainer: {
+    marginBottom: 24,
+  },
+  qrCode: {
+    width: 240,
+    height: 240,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+  },
+  pixInstructions: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 24,
     textAlign: 'center',
+    marginBottom: 20,
   },
-  qrCodeContainer: {
-    backgroundColor: '#FFF',
-    padding: 16,
+  pixValueContainer: {
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
     borderRadius: 12,
     marginBottom: 24,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    width: '100%',
   },
-  qrCodePlaceholder: {
-    width: 200,
-    height: 200,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F9F9F9',
-    borderRadius: 8,
-  },
-  pixAmountContainer: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  pixAmountLabel: {
-    fontSize: 14,
+  pixValueLabel: {
+    fontSize: 13,
     color: '#666',
     marginBottom: 4,
   },
-  pixAmountValue: {
+  pixValue: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#00C2A3',
+    color: '#00A859',
   },
-  pixLoading: {
+  loadingContainer: {
     alignItems: 'center',
   },
   loadingDots: {
@@ -577,23 +508,16 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
-  dot: {
+  loadingDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#00C2A3',
+    backgroundColor: '#00A859',
+    opacity: 0.5,
   },
-  dot1: {
-    opacity: 0.3,
-  },
-  dot2: {
-    opacity: 0.6,
-  },
-  dot3: {
-    opacity: 1,
-  },
-  pixLoadingText: {
-    fontSize: 14,
+  loadingText: {
+    fontSize: 13,
     color: '#666',
+    fontWeight: '500',
   },
 });

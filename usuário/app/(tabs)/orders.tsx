@@ -5,21 +5,44 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useOrders } from '@/contexts/OrdersContext';
 
-type StatusType = 'preparing' | 'in_transit' | 'delivered' | 'cancelled';
-
-const statusConfig: Record<StatusType, { label: string; color: string; icon: string }> = {
-  preparing: { label: 'Preparando', color: '#FFA500', icon: 'time-outline' },
-  in_transit: { label: 'Em trânsito', color: '#1E90FF', icon: 'bicycle-outline' },
-  delivered: { label: 'Entregue', color: '#00A859', icon: 'checkmark-circle-outline' },
-  cancelled: { label: 'Cancelado', color: '#FF0000', icon: 'close-circle-outline' },
-};
-
 export default function OrdersScreen() {
   const router = useRouter();
   const { orders } = useOrders();
 
+  const getStatusConfig = (status: string | undefined) => {
+    // Se status não existir, retorna um padrão
+    if (!status) {
+      return { label: 'Aguardando', color: '#999', icon: 'time-outline' };
+    }
+    
+    const statusLower = status.toLowerCase();
+    
+    // Preparando / Preparing
+    if (statusLower === 'preparando' || statusLower === 'preparing') {
+      return { label: 'Preparando', color: '#FFA500', icon: 'time-outline' };
+    }
+    
+    // Em trânsito
+    if (statusLower === 'em_transito' || statusLower === 'em transito' || statusLower === 'in_transit') {
+      return { label: 'Em trânsito', color: '#1E90FF', icon: 'bicycle-outline' };
+    }
+    
+    // Entregue
+    if (statusLower === 'entregue' || statusLower === 'delivered') {
+      return { label: 'Entregue', color: '#00A859', icon: 'checkmark-circle-outline' };
+    }
+    
+    // Cancelado
+    if (statusLower === 'cancelado' || statusLower === 'cancelled') {
+      return { label: 'Cancelado', color: '#FF0000', icon: 'close-circle-outline' };
+    }
+    
+    // Fallback para status desconhecido
+    return { label: status, color: '#999', icon: 'help-outline' };
+  };
+
   const handleOrderPress = (orderId: string) => {
-    router.push(`/(tabs)/order-details/${orderId}` as any);
+    router.push(`/(tabs)/order-detail/${orderId}` as any);
   };
 
   const handleBack = () => {
@@ -44,16 +67,24 @@ export default function OrdersScreen() {
         <View style={styles.backButton} />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {orders.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="receipt-outline" size={80} color="#CCC" />
             <Text style={styles.emptyText}>Você ainda não tem pedidos</Text>
             <Text style={styles.emptySubtext}>Seus pedidos aparecerão aqui</Text>
+            <TouchableOpacity
+              style={styles.shopButton}
+              onPress={() => router.push('/(tabs)')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.shopButtonText}>Começar a Comprar</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           orders.map((order) => {
-            const status = statusConfig[order.status];
+            const statusConfig = getStatusConfig(order.status);
+            
             return (
               <TouchableOpacity
                 key={order.id}
@@ -63,38 +94,48 @@ export default function OrdersScreen() {
               >
                 <View style={styles.orderHeader}>
                   <View>
-                    <Text style={styles.orderNumber}>Pedido #{order.orderNumber}</Text>
+                    <Text style={styles.orderNumber}>Pedido #{order.id}</Text>
                     <Text style={styles.orderDate}>{order.date}</Text>
                   </View>
-                  <View style={[styles.statusBadge, { backgroundColor: `${status.color}20` }]}>
-                    <Ionicons name={status.icon as any} size={16} color={status.color} />
-                    <Text style={[styles.statusText, { color: status.color }]}>
-                      {status.label}
+                  <View style={[styles.statusBadge, { backgroundColor: `${statusConfig.color}20` }]}>
+                    <Ionicons name={statusConfig.icon as any} size={16} color={statusConfig.color} />
+                    <Text style={[styles.statusText, { color: statusConfig.color }]}>
+                      {statusConfig.label}
                     </Text>
                   </View>
                 </View>
 
                 <View style={styles.orderItems}>
-                  {order.items.map((item, index) => (
+                  {order.items.slice(0, 3).map((item, index) => (
                     <View key={index} style={styles.orderItem}>
                       <Image source={item.image} style={styles.itemImage} />
-                      <Text style={styles.itemText}>
+                      <Text style={styles.itemText} numberOfLines={1}>
                         {item.quantity}x {item.name}
                       </Text>
                     </View>
                   ))}
+                  {order.items.length > 3 && (
+                    <Text style={styles.moreItems}>
+                      +{order.items.length - 3} {order.items.length - 3 === 1 ? 'item' : 'itens'}
+                    </Text>
+                  )}
                 </View>
 
                 <View style={styles.orderFooter}>
-                  <Text style={styles.orderTotal}>
-                    Total: R$ {order.total.toFixed(2).replace('.', ',')}
-                  </Text>
+                  <View>
+                    <Text style={styles.orderPharmacy}>{order.pharmacyName}</Text>
+                    <Text style={styles.orderTotal}>
+                      R$ {order.total.toFixed(2).replace('.', ',')}
+                    </Text>
+                  </View>
                   <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               </TouchableOpacity>
             );
           })
         )}
+        
+        <View style={{ height: 20 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -144,6 +185,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
     textAlign: 'center',
+    marginBottom: 24,
+  },
+  shopButton: {
+    backgroundColor: '#00A859',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 8,
+  },
+  shopButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
   },
   orderCard: {
     backgroundColor: '#FFF',
@@ -190,10 +243,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 50,
     marginRight: 12,
+    borderRadius: 4,
   },
   itemText: {
     fontSize: 14,
     color: '#666',
+    flex: 1,
+  },
+  moreItems: {
+    fontSize: 13,
+    color: '#999',
+    fontStyle: 'italic',
+    marginLeft: 52,
   },
   orderFooter: {
     flexDirection: 'row',
@@ -203,9 +264,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
   },
+  orderPharmacy: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 4,
+  },
   orderTotal: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '700',
+    color: '#00A859',
   },
 });

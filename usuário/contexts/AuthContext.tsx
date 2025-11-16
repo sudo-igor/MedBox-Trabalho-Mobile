@@ -61,18 +61,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signIn = async (email: string, password: string) => {
     try {
-      // Aqui você faria a chamada para sua API
-      // Por enquanto, vamos simular com dados do AsyncStorage
-      
-      // Simulação de login
+      // Usuário de teste para desenvolvimento
+      if (email === 'ana@email.com' && password === '123456') {
+        const testUser: User = {
+          id: 'test-user',
+          name: 'Ana Maria Santos',
+          email: 'ana@email.com',
+          phone: '(11) 98765-4321',
+        };
+        await saveUser(testUser);
+        setUser(testUser);
+        return;
+      }
+
+      // Tenta buscar usuário salvo no AsyncStorage
       const userData = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
       
       if (userData) {
         const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-      } else {
-        throw new Error('Usuário não encontrado');
+        // Verifica se o email corresponde (senha não é verificada no AsyncStorage por segurança)
+        if (parsedUser.email === email) {
+          setUser(parsedUser);
+          return;
+        }
       }
+      
+      throw new Error('Usuário não encontrado');
     } catch (error) {
       console.error('Erro ao fazer login:', error);
       throw error;
