@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+const STORAGE_KEY = "@farmacia_produtos";
 
 export interface produto {
   id: number;
@@ -9,54 +10,51 @@ export interface produto {
   imagem?: string;
 }
 
-let produtos: produto[] = [
+let produtosInicial: produto[] = [
   {
-  id: 0,
-  nome: "produto",
-  quantidade: 20,
-  preco: 20,
-  receita: true,
-  imagem: "@/assets/images/remedio.png",}
+    id: 0,
+    nome: "produto",
+    quantidade: 20,
+    preco: 20,
+    receita: true,
+    imagem: "null",
+  },
 ];
 let proximoId = 1;
 
 // 🔹 Função auxiliar para carregar do AsyncStorage
-export const carregarProdutos = async () => {
+export const carregarProdutos = async (): Promise<produto[]> => {
   try {
-    const json = await AsyncStorage.getItem("produtos");
-    if (json) {
-      produtos = JSON.parse(json);
-      // Ajusta o ID incremental
-      const ids = produtos.map((p) => p.id);
-      proximoId = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+    const dados = await AsyncStorage.getItem(STORAGE_KEY);
+    if (!dados) {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(produtosInicial));
+      console.log("✅ Pedidos inicializados");
     }
-  } catch (e) {
-    console.error("Erro ao carregar produtos:", e);
+    const lista = JSON.parse(dados);
+    return Array.isArray(lista) ? lista : [];
+  } catch (error) {
+    console.error("❌ Erro ao inicializar pedidos:", error);
+    return [];
   }
-  return produtos;
 };
 
 // 🔹 Função auxiliar para salvar no AsyncStorage
-const salvarProdutos = async () => {
+const salvarProdutos = async (produtos: produto) => {
   try {
-    await AsyncStorage.setItem("produtos", JSON.stringify(produtos));
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(produtos));
   } catch (e) {
     console.error("Erro ao salvar produtos:", e);
   }
 };
 
 // ========== CRUD ==========
-
-export const listarProdutos = async () => {
-  if (produtos.length === 0) await carregarProdutos();
-  return produtos;
-};
-
 export const buscarProduto = (id: number) => {
+  const produtos = carregarProdutos();
   return produtos.find((p) => p.id === id);
 };
 
 export const criarProduto = async (dados: produto) => {
+  const produtos = carregarProdutos();
   const novoProduto: produto = {
     id: proximoId++,
     nome: dados.nome,
@@ -65,25 +63,26 @@ export const criarProduto = async (dados: produto) => {
     receita: dados.receita,
     imagem: dados.imagem ?? "",
   };
-
   produtos.push(novoProduto);
   await salvarProdutos();
   return novoProduto;
 };
 
 export const atualizarProduto = async (id: number, dados: produto) => {
+  const produtos = carregarProdutos();
   const index = produtos.findIndex((p) => p.id === id);
 
   if (index === -1) return null;
 
   produtos[index] = { ...produtos[index], ...dados };
-  await salvarProdutos();
+  await salvarProdutos(produtos);
 
   return produtos[index];
 };
 
 export const deletarProduto = async (id: number) => {
-  produtos = produtos.filter((p) => p.id !== id);
-  await salvarProdutos();
+  const produtos = carregarProdutos();
+  const newList = produtos.filter((p) => p.id !== id);
+  await salvarProdutos(newList);
   return true;
 };
